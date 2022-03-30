@@ -10,4 +10,6 @@ class MainRepository @Inject constructor(private val notesDao: NotesDao) {
 
      fun getAllNotes()=notesDao.getAllNotes()
 
+    suspend fun getSingleNote(noteId:Int)=  notesDao.getSingleNote(noteId)
+
 }

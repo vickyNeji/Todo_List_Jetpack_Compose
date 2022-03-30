@@ -6,13 +6,5 @@ object DataSource {
 
 
 
-    val data= listOf<Note>(
-        Note("FIrst","Content"),
-        Note("Second","Content"),
-        Note("Third","Content"),
-        Note("Fourth","Content"),
-        Note("Five","Content"),
-
-    )
 
 }
