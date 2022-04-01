@@ -22,15 +22,20 @@ import androidx.compose.ui.unit.dp
 import com.example.todolistcompose.db.Note
 import com.example.todolistcompose.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val  viewModel by viewModels<MainViewModel>()
-
+    private val viewModel by viewModels<MainViewModel>()
+    var noteToDelete: Note? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+
+            val scaffoldState = rememberScaffoldState() // this contains the `SnackbarHostState`
+            val coroutineScope = rememberCoroutineScope()
+
             val items by viewModel.getAllNotes().observeAsState(arrayListOf())
 //            var openDialog by remember { mutableStateOf(false) }
 //            var textTitle = remember {
@@ -42,30 +47,55 @@ class MainActivity : ComponentActivity() {
 //                mutableStateOf("")
 //            }
 
-            Box(Modifier.fillMaxSize()) {
-                LazyColumn() {
-                    items(items = items) { note ->
-                        NoteItem(note = note){
-                            val intent=Intent(this@MainActivity,EditNoteActivity::class.java).also {
-                                it.putExtra("noteId",note.id)
-                                startActivity(it)
-                            }
+            Scaffold(scaffoldState = scaffoldState) {
+                Box(Modifier.fillMaxSize()) {
+                    LazyColumn() {
+                        items(items = items) { note ->
+                            NoteItem(note = note, onItemCLick = {
+                                val intent =
+                                    Intent(this@MainActivity, EditNoteActivity::class.java).also {
+                                        it.putExtra("noteId", note.id)
+                                        startActivity(it)
+                                    }
+
+                            }, onDeleteClick = {
+                                noteToDelete = note
+                                Log.d("TAG", "onCreateadadasd: ")
+                                viewModel.deleteNote(note)
+                                coroutineScope.launch {
+                                    val snackBarResult =
+                                        scaffoldState.snackbarHostState.showSnackbar(
+                                            message = "Note Deleted",
+                                            actionLabel = "Undo",
+                                            duration = SnackbarDuration.Long
+                                        )
+                                    when (snackBarResult) {
+                                        SnackbarResult.Dismissed -> Log.d(
+                                            "SnackbarDemo",
+                                            "Dismissed"
+                                        )
+                                        SnackbarResult.ActionPerformed -> {
+                                            viewModel.insertNote(noteToDelete!!)
+                                        }
+                                    }
+                                }
+                            })
                         }
                     }
-                }
-                FloatingActionButton(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(12.dp),
-                    onClick = {
-                        //openDialog = true
-                        val intent=Intent(this@MainActivity,AddNoteActivity::class.java).also {
-                            startActivity(it)
-                        }
+                    FloatingActionButton(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp),
+                        onClick = {
+                            //openDialog = true
+                            val intent =
+                                Intent(this@MainActivity, AddNoteActivity::class.java).also {
+                                    startActivity(it)
+                                }
 
-                    }) {
-                    Text("+")
-                }
+                        }) {
+                        Text("+")
+                    }
 
 //                if (openDialog) {
 //                    AlertDialog(onDismissRequest = {
@@ -115,7 +145,9 @@ class MainActivity : ComponentActivity() {
 //                            .padding(1.dp)
 //                            .wrapContentHeight())
 //                }
+                }
             }
+
 
         }
     }
@@ -124,7 +156,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun SingleItem(note: Note,onCLickNote:()->Unit) {
+fun SingleItem(note: Note, onCLickNote: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(5.dp)

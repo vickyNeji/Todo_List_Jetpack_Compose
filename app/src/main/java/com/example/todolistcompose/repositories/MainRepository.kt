@@ -12,4 +12,6 @@ class MainRepository @Inject constructor(private val notesDao: NotesDao) {
 
     suspend fun getSingleNote(noteId:Int)=  notesDao.getSingleNote(noteId)
 
+    suspend fun deleteNote(note: Note) = notesDao.deleteNote(note)
+
 }

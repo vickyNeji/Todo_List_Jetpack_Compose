@@ -33,4 +33,11 @@ class MainViewModel @Inject constructor(val repository: MainRepository): ViewMod
 
     }
 
+    fun deleteNote(note: Note){
+        viewModelScope.launch {
+            repository.deleteNote(note)
+        }
+    }
+
+
 }
